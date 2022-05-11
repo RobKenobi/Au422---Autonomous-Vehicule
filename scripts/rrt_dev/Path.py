@@ -1,5 +1,5 @@
 from Node import Node
-from Map import DEFAULT_MAP1
+from Map import big_map
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,7 +14,7 @@ def saturation(value, maximum, minimum=0):
 
 class Path:
 
-    def __init__(self, init_node=Node(), goal_node=Node(), map_env=DEFAULT_MAP1, dq=2, robot_size=3, max_iter=1000):
+    def __init__(self, init_node=Node(), goal_node=Node(), map_env=big_map, dq=2, robot_size=3, max_iter=1000):
         if isinstance(init_node, Node):
             self.init_node = init_node
         else:
@@ -146,8 +146,6 @@ class Path:
             self.optimized_path.append(origin)
         self.optimized = True
 
-
-
     def generate(self, optimize=False, plot=False):
         node = self.init_node
         while node.getPos() != self.goal_node.getPos() and self.max_iter > 0:
@@ -210,7 +208,7 @@ map = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
 if __name__ == "__main__":
     init = Node((1, 1))
-    goal = Node((17, 17))
-    P = Path(init, goal, map_env=DEFAULT_MAP1, dq=6, robot_size=1, max_iter=1000)
+    goal = Node((150, 150))
+    P = Path(init, goal, map_env=big_map, dq=6, robot_size=1, max_iter=100000)
     P.generate(optimize=True, plot=True)
     print(P.getPath())
