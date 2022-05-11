@@ -33,7 +33,6 @@ class RRT:
         """ Load the map and create the related image"""
         self.getMap()
 
-        self.run()
 
     # **********************************
 

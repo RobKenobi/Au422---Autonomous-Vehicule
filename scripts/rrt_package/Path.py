@@ -136,7 +136,7 @@ class Path:
             list_nodes.append(node)
 
             # Affichage
-            self.env[node.getX(), node.getY()] = 2
+            self.env[node.getX()][node.getY()] = 2
             pos_node = node.getPos()
             pos_parent = node.getParent().getPos()
             x = [pos_node[1], pos_parent[1]]
