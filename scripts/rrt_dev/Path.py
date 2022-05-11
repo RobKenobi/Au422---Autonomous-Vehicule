@@ -64,13 +64,11 @@ class Path:
         y_max = y + self.robot_size + 1
 
         if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
-            print(1, x, y)
             return False
 
         square = self.map[x_min:x_max, y_min:y_max]
 
         if np.sum(square):
-            print(f"2 -> x:{x}\ty:{y}\n{square}")
             return False
         return True
 
@@ -134,8 +132,21 @@ class Path:
         return Node((x, y), nearest_point)
 
     def optimize(self):
-        # TODO implémenter l'optimisation
-        pass
+        origin = self.init_node.getPos()
+
+        path = self.original_path
+        offset = 0
+        while origin != self.goal_node.getPos():
+            possibility = list()
+            for i in range(offset, len(path)):
+                if self.no_obstacle(origin, path[i]):
+                    possibility.append(path[i])
+                    offset = i + 1
+            origin = possibility[-1]
+            self.optimized_path.append(origin)
+        self.optimized = True
+
+
 
     def generate(self, optimize=False, plot=False):
         node = self.init_node
@@ -152,6 +163,9 @@ class Path:
                 node = node.getParent()
             self.original_path.reverse()
 
+            if optimize:
+                self.optimize()
+
             if plot:
                 x = [self.init_node.getPos('x')]
                 y = [self.init_node.getPos('y')]
@@ -161,20 +175,28 @@ class Path:
                     y.append(y_i)
                     self.plot_map[x_i, y_i] = 3
                 plt.plot(y, x, 'y-')
+
+                if optimize:
+                    x = [self.init_node.getPos('x')]
+                    y = [self.init_node.getPos('y')]
+                    self.plot_map[self.init_node.getPos('x'), self.init_node.getPos('y')] = 4
+                    for x_i, y_i in self.optimized_path:
+                        x.append(x_i)
+                        y.append(y_i)
+                        self.plot_map[x_i, y_i] = 4
+                    plt.plot(y, x, 'r-')
+
                 plt.imshow(self.plot_map)
                 plt.show()
-            if optimize:
-                self.optimize()
         else:
-            print("MAX")
+            print("Maximum iterations reached.\n The object might be too big for the environment.")
 
-    def getPath(self, optimize=False):
+    def getPath(self, optimize=True):
         if optimize:
             if self.optimized:
                 return self.optimized_path
             else:
-                self.optimize()
-                return self.optimized_path
+                raise Exception("The path hasn't been optimized")
         return self.original_path
 
 
@@ -190,5 +212,5 @@ if __name__ == "__main__":
     init = Node((1, 1))
     goal = Node((17, 17))
     P = Path(init, goal, map_env=DEFAULT_MAP1, dq=6, robot_size=1, max_iter=1000)
-    P.generate(optimize=False, plot=True)
-    print(P.getPath(optimize=False))
+    P.generate(optimize=True, plot=True)
+    print(P.getPath())
