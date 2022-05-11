@@ -10,7 +10,6 @@ import numpy as np
 import cv2
 
 
-
 import rrt_package as rr
 
 
@@ -115,8 +114,8 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-            pose.pose.position.x = pose_img[0]
-            pose.pose.position.y = pose_img[1]
+            pose.pose.position.x =
+            pose.pose.position.y =
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
