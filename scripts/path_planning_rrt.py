@@ -53,6 +53,7 @@ class RRT:
 
             self.map_width = self.map.info.width
             self.map_height = self.map.info.height
+
             print(f"MAP WIDTH {self.map_width}\nMAP HEIGHT {self.map_height}")
             self.img_map = np.array(self.map.data).reshape(
                 (self.map_width, self.map_height))
