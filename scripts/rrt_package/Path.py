@@ -4,46 +4,46 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from rrt_package.Node import Node
-from rrt_package.utils import gen_point, nearest, checkpoints, plot_path_coord
+from Node import Node
+from utils import gen_point, nearest, checkpoints, plot_path_coord
 
 DEFAULT_MAP = grid1 = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 0, 0, 0],
+                                 1, 1, 1, 1, 1, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 1, 1, 0, 0, 1, 0, 0, 0],
+                                 1, 1, 1, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 1, 1, 0, 0, 1, 0, 0, 0],
+                                 0, 1, 1, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 1, 1, 0, 0, 1, 0, 0, 0],
+                                 0, 1, 1, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 1, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
-                                    1, 1, 1, 1, 1, 1, 0, 0, 0],
+                                 1, 1, 1, 1, 1, 1, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
 
@@ -97,6 +97,34 @@ class Path:
                 return self._new_node(list_node)
 
         return Node((x, y), nearest_q)
+
+    def pathLineVerif(self, env, dim0, dim1, rob):
+        width, height = self.env.shape
+
+        def saturator_x(x):
+            return min(width - 1, max(0, x))
+
+        def saturator_y(y):
+            return min(height - 1, max(0, y))
+
+        def square(x, y):
+            return env[saturator_x(x - rob // 2):saturator_x(x + rob // 2)][
+                   saturator_y(y - rob // 2):saturator_y(y + rob // 2)]
+
+        def verif(x, y):
+            table = list(np.array(square(x, y)).flatten())
+            return table.count(1) == 0
+
+        rx, ry = checkpoints(dim0[0], dim0[1], dim1[0], dim1[1])
+
+        n = len(rx)
+        for i in range(n):
+            if verif(rx[i], ry[i]):
+                continue
+            else:
+                return False
+
+        return True
 
     def generate(self, optimized=False):
         node = self.init_node

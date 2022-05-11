@@ -29,3 +29,7 @@ def checkpoints(x1, y1, x2, y2):
     else:  # means that (x1,y1) = (x2,y2)
         to_check_x = to_check_y = None
     return to_check_x, to_check_y
+
+
+
+
