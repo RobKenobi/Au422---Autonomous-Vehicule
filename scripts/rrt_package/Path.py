@@ -4,8 +4,8 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from Node import Node
-from utils import gen_point, nearest, checkpoints, plot_path_coord
+from rrt_package.Node import Node
+from rrt_package.utils import gen_point, nearest, checkpoints, plot_path_coord
 
 DEFAULT_MAP = grid1 = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
