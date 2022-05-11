@@ -48,12 +48,14 @@ DEFAULT_MAP = grid1 = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 
 class Path:
-    def __init__(self, initial_node=Node(), destination_node=Node(), delta_q=1, environnement=DEFAULT_MAP, debug=False):
+    def __init__(self, initial_node=Node(), destination_node=Node(), delta_q=1, environnement=DEFAULT_MAP, max_iter=100,
+                 debug=False):
         self.init_node = initial_node
         self.dest_node = destination_node
         self.dq = delta_q
         self.env = environnement
         self.optimized = False
+        self.max_iter = max_iter
 
         self._path = []
         self._optimized_path = []
@@ -73,8 +75,7 @@ class Path:
             x, y = self.dest_node.getPos()
         else:
             # Compute the angle between the nearest q and the random position generated
-            theta = np.arctan2(
-                new_point[1] - y_parent, new_point[0] - x_parent)
+            theta = np.arctan2(new_point[1] - y_parent, new_point[0] - x_parent)
 
             # Compute coordinates of the new point
 
@@ -85,20 +86,15 @@ class Path:
 
             # Checking that the new point is not on an obstacle
             if self.env[x, y] == obstacle:
-                return self._new_node(list_node)
+                return None
 
         # Checking that there are no obstacle between nearest_q and the new point
-        to_check_x, to_check_y = checkpoints(x, y, x_parent, y_parent)
-        if to_check_x is None:  # means that (x,y) = (x_parent,y_parent)
-            return self._new_node(list_node)
-
-        for i in range(len(to_check_x)):
-            if self.env[to_check_x[i], to_check_y[i]] == obstacle:
-                return self._new_node(list_node)
+        if not self.pathLineVerif((x, y), (x_parent, y_parent), 5):
+            return None
 
         return Node((x, y), nearest_q)
 
-    def pathLineVerif(self, env, dim0, dim1, rob):
+    def pathLineVerif(self, pos1, pos2, rob):
         width, height = self.env.shape
 
         def saturator_x(x):
@@ -108,29 +104,36 @@ class Path:
             return min(height - 1, max(0, y))
 
         def square(x, y):
-            return env[saturator_x(x - rob // 2):saturator_x(x + rob // 2)][
+            return self.env[saturator_x(x - rob // 2):saturator_x(x + rob // 2)][
                    saturator_y(y - rob // 2):saturator_y(y + rob // 2)]
 
         def verif(x, y):
             table = list(np.array(square(x, y)).flatten())
             return table.count(1) == 0
 
-        rx, ry = checkpoints(dim0[0], dim0[1], dim1[0], dim1[1])
+        rx, ry = checkpoints(pos1[0], pos1[1], pos2[0], pos2[1])
+
+        if rx is None:
+            print("WTF!")
+            return False
 
         n = len(rx)
+        print(n)
         for i in range(n):
-            if verif(rx[i], ry[i]):
-                continue
-            else:
+            if not verif(rx[i], ry[i]):
                 return False
-
         return True
 
     def generate(self, optimized=False):
         node = self.init_node
         list_nodes = [node]
-        while node.getPos() != self.dest_node.getPos():
-            node = self._new_node(list_nodes)
+        while node.getPos() != self.dest_node.getPos() and self.max_iter > 0:
+            self.max_iter -= 1
+            new_node = self._new_node(list_nodes)
+            # print(new_node)
+            if new_node is None:
+                continue
+            node = new_node
             list_nodes.append(node)
 
             # Affichage
@@ -140,6 +143,11 @@ class Path:
             x = [pos_node[1], pos_parent[1]]
             y = [pos_node[0], pos_parent[0]]
             plt.plot(x, y, 'c--')
+
+        if not self.max_iter:
+            print("MAX")
+            exit(1)
+
         path = list()
         while node.getParent():
             path.append(node)
@@ -194,3 +202,10 @@ class Path:
         plt.show()
 
         print(f"Displaying time : {round(time() - t0, 2)} s", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    print("Starting RRT")
+    P = Path(Node((0, 0)), Node((10, 10)), delta_q=4, environnement=DEFAULT_MAP, max_iter=1000)
+    P.generate(optimized=True)
+    P.display()

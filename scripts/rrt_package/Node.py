@@ -3,7 +3,6 @@ import math
 
 class Node:
     def __init__(self, pos=(0, 0), parent=None):
-
         if len(pos) == 2:
             pos = tuple(pos)
         else:

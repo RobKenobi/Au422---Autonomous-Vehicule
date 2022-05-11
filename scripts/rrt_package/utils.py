@@ -31,5 +31,11 @@ def checkpoints(x1, y1, x2, y2):
     return to_check_x, to_check_y
 
 
+def check_line(env, pos1, pos2, robot_size, debug=False):
+    to_check_x, to_check_y = checkpoints(pos1[0], pos1[1], pos2[0], pos2[1])
 
+    if to_check_x is None:
+        if debug:
+            print("checkpoints returned None")
+        return False
 
