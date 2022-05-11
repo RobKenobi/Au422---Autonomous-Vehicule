@@ -51,7 +51,6 @@ class RRT:
             self.map_origin = (-self.map.info.origin.position.x, -self.map.info.origin.position.y)
 
 
-
             self.map_width = self.map.info.width
             self.map_height = self.map.info.height
             print(f"MAP WIDTH {self.map_width}\nMAP HEIGHT {self.map_height}")
@@ -114,8 +113,9 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-            pose.pose.position.x =
-            pose.pose.position.y =
+            self.image_pos = (1/self.map_resolution * self.map_origin[0], -1/self.map_resolution * self.map_origin[1] + self.map_height)
+            pose.pose.position.x = self.map_resolution * (self.image_pos[0] - self.map_origin[0])
+            pose.pose.position.y = self.map_resolution * (-self.image_pos[1] - self.map_origin[1] + self.map_height)
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
