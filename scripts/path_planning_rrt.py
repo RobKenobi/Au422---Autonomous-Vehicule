@@ -113,9 +113,9 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-            self.image_pos = (1/self.map_resolution * self.map_origin[0], -1/self.map_resolution * self.map_origin[1]+self.map_height)
-            pose.pose.position.x = self.map_resolution * self.image_pos[0] - self.map_origin[0]
-            pose.pose.position.y = -self.map_resolution * self.image_pos[1] - self.map_origin[1] + self.map_height
+            self.image_pos = (1/self.map_resolution * self.map_origin[0], -1/self.map_resolution * self.map_origin[1] + self.map_height)
+            pose.pose.position.x = self.map_resolution * (self.image_pos[0] - self.map_origin[0])
+            pose.pose.position.y = self.map_resolution * (-self.image_pos[1] - self.map_origin[1] + self.map_height)
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
