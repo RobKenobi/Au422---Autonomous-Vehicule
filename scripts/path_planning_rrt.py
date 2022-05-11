@@ -7,6 +7,7 @@ from nav_msgs.srv import GetMap
 from nav_msgs.msg import Path
 import tf
 import numpy as np
+import cv2
 
 
 import rrt_package as rr
@@ -46,13 +47,25 @@ class RRT:
 
             self.map = get_map().map
 
+            self.map_resolution = self.map.info.resolution
+            self.map_origin = (-self.map.info.origin.position.x, -self.map.info.origin.position.y)
+
+
+
             self.map_width = self.map.info.width
             self.map_height = self.map.info.height
             print(f"MAP WIDTH {self.map_width}\nMAP HEIGHT {self.map_height}")
             self.img_map = np.array(self.map.data).reshape(
                 (self.map_width, self.map_height))
-            np.save("map", self.img_map)
+            #np.save("map", self.img_map)
             print("Map received !")
+            self.img_map = self.img_map * 64 / 255
+            cv2.imwrite('Map_img.jpg', self.img_map)
+            self.img_out = cv2.imread('Map_img.jpg', 0)
+            cv2.imshow("IMAGE_MAP", 255 - self.img_out)
+            # cv2.imshow("IMAGE_MAP", cv2.bitwise_not(self.img_map))
+            cv2.waitKey()
+
         except rospy.ServiceException as e:
             print(f"Map service call failed: {e}")
             exit()
@@ -101,8 +114,8 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-            # pose.pose.position.x = ....
-            #pose.pose.position.y = ...
+            pose.pose.position.x =
+            pose.pose.position.y =
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
