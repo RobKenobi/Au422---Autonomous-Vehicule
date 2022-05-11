@@ -101,6 +101,7 @@ class RRT:
                     rr.Node(self.goal), delta_q=self.dq)
         P.generate(optimized=True)
         self.path = P._optimized_path
+        self.publishPath()
 
     # **********************************
 
