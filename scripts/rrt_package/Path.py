@@ -48,8 +48,7 @@ DEFAULT_MAP = grid1 = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 
 class Path:
-    def __init__(self, initial_node=Node(), destination_node=Node(), delta_q=1, environnement=DEFAULT_MAP, max_iter=100,
-                 debug=False):
+    def __init__(self, initial_node=Node(), destination_node=Node(), delta_q=1, environnement=DEFAULT_MAP, max_iter=100, debug=False):
         self.init_node = initial_node
         self.dest_node = destination_node
         self.dq = delta_q
@@ -89,8 +88,8 @@ class Path:
                 return None
 
         # Checking that there are no obstacle between nearest_q and the new point
-        if not self.pathLineVerif((x, y), (x_parent, y_parent), 5):
-            return None
+        #if not self.pathLineVerif((x, y), (x_parent, y_parent), 5):
+        #    return None
 
         return Node((x, y), nearest_q)
 
@@ -122,7 +121,7 @@ class Path:
         for i in range(n):
             if not verif(rx[i], ry[i]):
                 return False
-        return True
+        return False
 
     def generate(self, optimized=False):
         node = self.init_node
