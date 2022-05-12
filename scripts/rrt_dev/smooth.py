@@ -3,16 +3,20 @@ import matplotlib.pyplot as plt
 from Map import DEFAULT_MAP1
 
 
-class SmoothPath:
-    def __init__(self, init_point, path):
-        if not isinstance(init_point, tuple):
+class SmoothPathBezier:
+    def __init__(self, starting_point, path):
+        if not isinstance(starting_point, tuple):
             raise TypeError("init_point must be a tuple")
-        if len(init_point) != 2:
+        if len(starting_point) != 2:
             raise ValueError("init_point must be a tuple of size 2")
         if not isinstance(path, list):
             raise TypeError("path must be a list")
 
-        self.init_point = init_point
+        self.init_point = starting_point
+        if path[0] == starting_point:
+            p = path
+            p.pop(0)
+            self.raw_path = p
         self.raw_path = path
         self.path = list()
 
@@ -32,20 +36,37 @@ class SmoothPath:
                     first = points[i]
                 points = new
             self.path.append(points[0])
+        self.path.pop(0)
+
+    def getPath(self, init=False, smooth=True):
+        if smooth:
+            if len(self.path):
+                if init:
+                    p = self.path.copy()
+                    p.insert(0, self.init_point)
+                    return p
+                else:
+                    return self.path
+            raise AttributeError("path hasn't been generated yet. Call generate() on SmoothPath object")
+        else:
+            if init:
+                p = self.raw_path.copy()
+                p.insert(0, self.init_point)
+                return p
+            else:
+                return self.raw_path
 
 
 if __name__ == "__main__":
-    p = SmoothPath((1, 1), [(18, 13), (17, 17)])
+    p = SmoothPathBezier((1, 1), [(18, 13), (17, 17)])
     p.generate(100)
     print(p.path)
-    x = [pos[0] for pos in p.path]
-    y = [pos[1] for pos in p.path]
+    x = [pos[0] for pos in p.getPath(init=True, smooth=True)]
+    y = [pos[1] for pos in p.getPath(init=True, smooth=True)]
     plt.imshow(DEFAULT_MAP1)
     plt.plot(y, x, 'r-')
 
-    x = [pos[0] for pos in p.raw_path]
-    x.insert(0, p.init_point[0])
-    y = [pos[1] for pos in p.raw_path]
-    y.insert(0, p.init_point[1])
+    x = [pos[0] for pos in p.getPath(init=True, smooth=False)]
+    y = [pos[1] for pos in p.getPath(init=True, smooth=False)]
     plt.plot(y, x, 'b-')
     plt.show()
