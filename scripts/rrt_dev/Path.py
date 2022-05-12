@@ -54,6 +54,7 @@ class Path:
         self.optimized = False
         self.original_path = list()
         self.optimized_path = list()
+        self.smooth_path = list()
 
     def free_square(self, x, y):
         width, height = self.map.shape
@@ -68,7 +69,7 @@ class Path:
 
         return not np.any(self.map[x_min:x_max, y_min:y_max])
 
-    def no_obstacle(self, pos1, pos2):
+    def no_obstacle_on_line(self, pos1, pos2):
         x1, y1 = pos1
         x2, y2 = pos2
 
@@ -118,7 +119,7 @@ class Path:
             if not self.free_square(x, y):
                 return None
 
-            if not self.no_obstacle((x, y), (x_parent, y_parent)):
+            if not self.no_obstacle_on_line((x, y), (x_parent, y_parent)):
                 return None
 
         if plot:
@@ -135,7 +136,7 @@ class Path:
         while origin != self.goal_node.getPos():
             possibility = list()
             for i in range(offset, len(path)):
-                if self.no_obstacle(origin, path[i]):
+                if self.no_obstacle_on_line(origin, path[i]):
                     possibility.append(path[i])
                     offset = i + 1
             origin = possibility[-1]
