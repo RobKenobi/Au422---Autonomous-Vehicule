@@ -1,5 +1,5 @@
 from Node import Node
-from Map import big_map
+from Map import big_map, DEFAULT_MAP1
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -66,11 +66,7 @@ class Path:
         if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
             return False
 
-        square = self.map[x_min:x_max, y_min:y_max]
-
-        if np.sum(square):
-            return False
-        return True
+        return not np.any(self.map[x_min:x_max, y_min:y_max])
 
     def no_obstacle(self, pos1, pos2):
         x1, y1 = pos1
@@ -208,7 +204,7 @@ map = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
 if __name__ == "__main__":
     init = Node((1, 1))
-    goal = Node((150, 150))
-    P = Path(init, goal, map_env=big_map, dq=6, robot_size=1, max_iter=100000)
+    goal = Node((17, 17))
+    P = Path(init, goal, map_env=DEFAULT_MAP1, dq=6, robot_size=1, max_iter=100000)
     P.generate(optimize=True, plot=True)
     print(P.getPath())
