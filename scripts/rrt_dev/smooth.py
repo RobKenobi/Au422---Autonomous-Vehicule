@@ -58,9 +58,8 @@ class SmoothPathBezier:
 
 
 if __name__ == "__main__":
-    p = SmoothPathBezier((1, 1), [(18, 13), (17, 17)])
+    p = SmoothPathBezier((1, 1), [(12, 1), (15, 9), (18, 13), (17, 17)])
     p.generate(100)
-    print(p.path)
     x = [pos[0] for pos in p.getPath(init=True, smooth=True)]
     y = [pos[1] for pos in p.getPath(init=True, smooth=True)]
     plt.imshow(DEFAULT_MAP1)
