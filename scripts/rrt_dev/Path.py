@@ -12,42 +12,74 @@ def saturation(value, maximum, minimum=0):
     return max(min(value, maximum), minimum)
 
 
-class Path:
+class SmoothTurn:
+    def __init__(self, points, alpha=0.9, nb_points=10):
+        if not isinstance(points, list):
+            raise TypeError("points must be a list of tuples")
+        if len(points) != 3:
+            raise ValueError("points must contain only three points")
 
+        if not isinstance(nb_points, int):
+            raise TypeError("nb_points must be an int")
+
+        self.points = points
+        self.x = [pos[0] for pos in self.points]
+        self.y = [pos[1] for pos in self.points]
+        self.nb_points = nb_points
+
+        x1 = (1 - alpha) * self.x[0] + alpha * self.x[1]
+        x2 = (1 - alpha) * self.x[2] + alpha * self.x[1]
+
+        y1 = (1 - alpha) * self.y[0] + alpha * self.y[1]
+        y2 = (1 - alpha) * self.y[2] + alpha * self.y[1]
+
+        self.x = [x1, self.x[1], x2]
+        self.y = [y1, self.y[1], y2]
+
+        self.path = list()
+
+    def generate(self):
+        t = np.linspace(0, 1, self.nb_points)
+        # Quadratic Bezier curve
+        x_f = (1 - t) ** 2 * self.x[0] + 2 * t * (1 - t) * self.x[1] + t ** 2 * self.x[2]
+        y_f = (1 - t) ** 2 * self.y[0] + 2 * t * (1 - t) * self.y[1] + t ** 2 * self.y[2]
+        self.path = [(x, y) for x, y in zip(x_f, y_f)]
+        return self.path
+
+
+class Path:
     def __init__(self, init_node=Node(), goal_node=Node(), map_env=big_map, dq=2, robot_size=3, max_iter=1000):
-        if isinstance(init_node, Node):
-            self.init_node = init_node
-        else:
+        if not isinstance(init_node, Node):
             raise TypeError("init_node type must be Node")
 
-        if isinstance(goal_node, Node):
-            self.goal_node = goal_node
-        else:
+        if not isinstance(goal_node, Node):
             raise TypeError("goal_node type must be Node")
 
         try:
-            if len(map_env.shape) == 2:
-                self.map = map_env
-                self.plot_map = self.map.copy()
-            else:
+            if len(map_env.shape) != 2:
                 raise ValueError("map_env must be a 2D-array")
         except:
             raise TypeError("map_env type must be numpy.ndarray")
 
-        if isinstance(dq, int):
-            self.dq = dq
-        else:
+        if not isinstance(dq, int):
             raise ValueError("qd type must be int")
 
-        if isinstance(robot_size, int):
-            self.robot_size = robot_size
-        else:
+        if not isinstance(robot_size, int):
             raise ValueError("robot_size type must be int")
 
-        if isinstance(max_iter, int):
-            self.max_iter = max_iter
-        else:
+        if not isinstance(max_iter, int):
             raise ValueError("max_iter type must be int")
+
+        self.init_node = init_node
+        self.goal_node = goal_node
+
+        self.map = map_env
+        self.plot_map = self.map.copy()
+
+        self.dq = dq
+        self.robot_size = robot_size
+
+        self.max_iter = max_iter
 
         self.list_nodes = [self.init_node]
         self.obstacle = 1
@@ -60,13 +92,11 @@ class Path:
         width, height = self.map.shape
         x_min = x - self.robot_size
         x_max = x + self.robot_size + 1
-
         y_min = y - self.robot_size
         y_max = y + self.robot_size + 1
 
         if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
             return False
-
         return not np.any(self.map[x_min:x_max, y_min:y_max])
 
     def no_obstacle_on_line(self, pos1, pos2):
@@ -92,18 +122,18 @@ class Path:
                 return False
         return True
 
-    def new_node(self, list_nodes, plot=False):
+    def new_node(self):
         width, height = self.map.shape
 
         # Generating new point
         new_point = gen_point(width, height)
-        nearest_point = min(list_nodes, key=lambda node: node.distance_from(new_point))
+        nearest_point = min(self.list_nodes, key=lambda node: node.distance_from(new_point))
 
         # Saving coordinates of parent node
         x_parent = nearest_point.getPos('x')
         y_parent = nearest_point.getPos('y')
 
-        # Checking the goal if the goal is in a range inferior to dq
+        # Checking if the goal is in a range inferior to dq
         if nearest_point.distance_from(self.goal_node.getPos()) < self.dq:
             x, y = self.goal_node.getPos()
 
@@ -119,35 +149,17 @@ class Path:
             if not self.free_square(x, y):
                 return None
 
+            # Checking the path between the new node and its parent
             if not self.no_obstacle_on_line((x, y), (x_parent, y_parent)):
                 return None
 
-        if plot:
-            plt.plot([y, y_parent], [x, x_parent], 'c--')
-            self.plot_map[x, y] = 2
-
         return Node((x, y), nearest_point)
 
-    def optimize(self):
-        origin = self.init_node.getPos()
-
-        path = self.original_path
-        offset = 0
-        while origin != self.goal_node.getPos():
-            possibility = list()
-            for i in range(offset, len(path)):
-                if self.no_obstacle_on_line(origin, path[i]):
-                    possibility.append(path[i])
-                    offset = i + 1
-            origin = possibility[-1]
-            self.optimized_path.append(origin)
-        self.optimized = True
-
-    def generate(self, optimize=False, plot=False):
+    def generate(self, optimize=False):
         node = self.init_node
-        while node.getPos() != self.goal_node.getPos() and self.max_iter > 0:
+        while node.getPos() != self.goal_node.getPos() and self.max_iter:
             self.max_iter -= 1
-            new_node = self.new_node(self.list_nodes, plot=plot)
+            new_node = self.new_node()
             if new_node is not None:
                 node = new_node
                 self.list_nodes.append(node)
@@ -160,39 +172,45 @@ class Path:
 
             if optimize:
                 self.optimize()
-
-            if plot:
-                x = [self.init_node.getPos('x')]
-                y = [self.init_node.getPos('y')]
-                self.plot_map[x, y] = 3
-                for x_i, y_i in self.original_path:
-                    x.append(x_i)
-                    y.append(y_i)
-                    self.plot_map[x_i, y_i] = 3
-                plt.plot(y, x, 'y-')
-
-                if optimize:
-                    x = [self.init_node.getPos('x')]
-                    y = [self.init_node.getPos('y')]
-                    self.plot_map[self.init_node.getPos('x'), self.init_node.getPos('y')] = 4
-                    for x_i, y_i in self.optimized_path:
-                        x.append(x_i)
-                        y.append(y_i)
-                        self.plot_map[x_i, y_i] = 4
-                    plt.plot(y, x, 'r-')
-
-                plt.imshow(self.plot_map)
-                plt.show()
         else:
             print("Maximum iterations reached.\n The object might be too big for the environment.")
 
-    def getPath(self, optimize=True):
-        if optimize:
-            if self.optimized:
-                return self.optimized_path
-            else:
-                raise Exception("The path hasn't been optimized")
-        return self.original_path
+    def optimize(self):
+        origin = self.init_node.getPos()
+        path = self.original_path
+        offset = 0
+        while origin != self.goal_node.getPos():
+            possibility = list()
+            for i in range(offset, len(path)):
+                if self.no_obstacle_on_line(origin, path[i]):
+                    possibility.append(path[i])
+                    offset = i + 1
+            origin = possibility[-1]
+            self.optimized_path.append(origin)
+        self.optimized = True
+
+    def smoothPath(self, alpha=0.9, optimized=True):
+        path_to_smooth = [self.original_path, self.optimized_path][optimized]
+        prev = self.init_node.getPos()
+
+        for i in range(len(path_to_smooth) - 1):
+            turn = SmoothTurn([prev, path_to_smooth[i], path_to_smooth[i + 1]], alpha, 5)
+            self.smooth_path.extend(turn.generate())
+        path_to_smooth.append(path_to_smooth[-1])
+
+    def getPath(self, name='original', init=False):
+        if name == "original" or name == "":
+            path = self.original_path.copy()
+        elif name == "optimized":
+            path = self.optimized_path.copy()
+        elif name == "smooth":
+            path = self.smooth_path.copy()
+        else:
+            raise ValueError("name can only be {'original', 'optimized','smooth'}")
+
+        if init:
+            path.insert(0, self.init_node.getPos())
+        return path
 
 
 map = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -206,6 +224,18 @@ map = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 if __name__ == "__main__":
     init = Node((1, 1))
     goal = Node((17, 17))
-    P = Path(init, goal, map_env=DEFAULT_MAP1, dq=6, robot_size=1, max_iter=100000)
-    P.generate(optimize=True, plot=True)
-    print(P.getPath())
+    P = Path(init, goal, map_env=DEFAULT_MAP1, dq=6, robot_size=1, max_iter=10000)
+    P.generate(optimize=True)
+    P.smoothPath(alpha=0.9, optimized=True)
+    path = P.getPath("smooth", init=True)
+    x = [pos[0] for pos in path]
+    y = [pos[1] for pos in path]
+    plt.plot(y, x)
+
+    path = P.getPath("optimized", init=True)
+    x = [pos[0] for pos in path]
+    y = [pos[1] for pos in path]
+    plt.plot(y, x)
+    plt.imshow(DEFAULT_MAP1)
+
+    plt.show()
