@@ -90,10 +90,10 @@ class Path:
 
     def free_square(self, x, y):
         width, height = self.map.shape
-        x_min = x - self.robot_size
-        x_max = x + self.robot_size + 1
-        y_min = y - self.robot_size
-        y_max = y + self.robot_size + 1
+        x_min = int(x) - self.robot_size
+        x_max = int(x) + self.robot_size + 1
+        y_min = int(y) - self.robot_size
+        y_max = int(y) + self.robot_size + 1
 
         if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
             return False
@@ -189,14 +189,18 @@ class Path:
             self.optimized_path.append(origin)
         self.optimized = True
 
-    def smoothPath(self, alpha=0.9, optimized=True):
+    def smoothPath(self, alpha=0.9, nb_points=10, optimized=True):
         path_to_smooth = [self.original_path, self.optimized_path][optimized]
         prev = self.init_node.getPos()
 
         for i in range(len(path_to_smooth) - 1):
-            turn = SmoothTurn([prev, path_to_smooth[i], path_to_smooth[i + 1]], alpha, 5)
-            self.smooth_path.extend(turn.generate())
-        path_to_smooth.append(path_to_smooth[-1])
+            turn = SmoothTurn([prev, path_to_smooth[i], path_to_smooth[i + 1]], alpha, nb_points)
+            p = turn.generate()
+            # TODO vérifier que le virage ne passe pas à travers un obstacle
+
+            self.smooth_path.extend(p)
+            prev = path_to_smooth[i]
+        self.smooth_path.append(self.goal_node.getPos())
 
     def getPath(self, name='original', init=False):
         if name == "original" or name == "":
@@ -223,19 +227,23 @@ map = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
 if __name__ == "__main__":
     init = Node((1, 1))
-    goal = Node((17, 17))
-    P = Path(init, goal, map_env=DEFAULT_MAP1, dq=6, robot_size=1, max_iter=10000)
-    P.generate(optimize=True)
-    P.smoothPath(alpha=0.9, optimized=True)
+    goal = Node((130, 130))
+    P = Path(init, goal, map_env=big_map, dq=6, robot_size=0, max_iter=10000)
+    P.generate(optimize=False)
+    P.smoothPath(alpha=0.75, nb_points=10, optimized=False)
+
+    path = P.getPath("original", init=True)
+    x = [pos[0] for pos in path]
+    y = [pos[1] for pos in path]
+    plt.plot(y, x, 'c', label="Orignial")
+
     path = P.getPath("smooth", init=True)
     x = [pos[0] for pos in path]
     y = [pos[1] for pos in path]
-    plt.plot(y, x)
+    plt.plot(y, x, 'r', label="Smooth")
 
-    path = P.getPath("optimized", init=True)
-    x = [pos[0] for pos in path]
-    y = [pos[1] for pos in path]
-    plt.plot(y, x)
-    plt.imshow(DEFAULT_MAP1)
+    plt.legend()
+
+    plt.imshow(big_map)
 
     plt.show()
