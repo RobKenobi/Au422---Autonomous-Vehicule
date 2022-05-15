@@ -1,7 +1,6 @@
 from Node import Node
 import Map
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def gen_point(width, height):
@@ -90,10 +89,10 @@ class Path:
 
     def free_square(self, x, y):
         width, height = self.map.shape
-        x_min = int(x) - self.robot_size
-        x_max = int(x) + self.robot_size + 1
-        y_min = int(y) - self.robot_size
-        y_max = int(y) + self.robot_size + 1
+        x_min = round(x) - self.robot_size
+        x_max = round(x) + self.robot_size + 1
+        y_min = round(y) - self.robot_size
+        y_max = round(y) + self.robot_size + 1
 
         if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
             return False
@@ -156,6 +155,9 @@ class Path:
         return Node((x, y), nearest_point)
 
     def generate(self, optimize=False, smooth=False, alpha=0.75, nb_points=10):
+        if alpha < 0.5:  # must be greater than 0.5
+            alpha = 0.51
+
         node = self.init_node
         while node.getPos() != self.goal_node.getPos() and self.max_iter:
             self.max_iter -= 1
@@ -228,11 +230,13 @@ class Path:
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
     init = Node((1, 1))
     goal = Node((130, 130))
     map = Map.big_map
     P = Path(init, goal, map_env=map, dq=6, robot_size=1, max_iter=10000)
-    P.generate(optimize=True, smooth=True, alpha=0.75, nb_points=5)
+    P.generate(optimize=True, smooth=True, alpha=0.5, nb_points=5)
 
     path = P.getPath("optimized", init=True)
     x = [pos[0] for pos in path]
