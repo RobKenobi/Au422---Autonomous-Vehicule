@@ -1,5 +1,5 @@
 from Node import Node
-from Map import big_map, DEFAULT_MAP1
+import Map
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -48,7 +48,7 @@ class SmoothTurn:
 
 
 class Path:
-    def __init__(self, init_node=Node(), goal_node=Node(), map_env=big_map, dq=2, robot_size=3, max_iter=1000):
+    def __init__(self, init_node=Node(), goal_node=Node(), map_env=Map.big_map, dq=2, robot_size=3, max_iter=1000):
         if not isinstance(init_node, Node):
             raise TypeError("init_node type must be Node")
 
@@ -155,7 +155,7 @@ class Path:
 
         return Node((x, y), nearest_point)
 
-    def generate(self, optimize=False):
+    def generate(self, optimize=False, smooth=False, alpha=0.75, nb_points=10):
         node = self.init_node
         while node.getPos() != self.goal_node.getPos() and self.max_iter:
             self.max_iter -= 1
@@ -172,16 +172,19 @@ class Path:
 
             if optimize:
                 self.optimize()
+
+            if smooth:
+                self.smoothPath(alpha, nb_points, optimized=optimize)
         else:
             print("Maximum iterations reached.\n The object might be too big for the environment.")
 
     def optimize(self):
         origin = self.init_node.getPos()
-        path = self.original_path
-        offset = 0
+        path = self.original_path.copy()
+        offset = 1
         while origin != self.goal_node.getPos():
-            possibility = list()
-            for i in range(offset, len(path)):
+            possibility = [path[offset]]
+            for i in range(offset + 1, len(path)):
                 if self.no_obstacle_on_line(origin, path[i]):
                     possibility.append(path[i])
                     offset = i + 1
@@ -189,13 +192,20 @@ class Path:
             self.optimized_path.append(origin)
         self.optimized = True
 
-    def smoothPath(self, alpha=0.9, nb_points=10, optimized=True):
+    def smoothPath(self, alpha=0.75, nb_points=10, optimized=True):
         path_to_smooth = [self.original_path, self.optimized_path][optimized]
         prev = self.init_node.getPos()
 
         for i in range(len(path_to_smooth) - 1):
-            turn = SmoothTurn([prev, path_to_smooth[i], path_to_smooth[i + 1]], alpha, nb_points)
-            p = turn.generate()
+            valid = False
+            while not valid:
+                turn = SmoothTurn([prev, path_to_smooth[i], path_to_smooth[i + 1]], alpha, nb_points)
+                p = turn.generate()
+                for pos in p:
+                    if not self.free_square(pos[0], pos[1]):
+                        alpha = min(alpha + 0.1, 1)
+                        break
+                valid = True
             # TODO vérifier que le virage ne passe pas à travers un obstacle
 
             self.smooth_path.extend(p)
@@ -217,25 +227,17 @@ class Path:
         return path
 
 
-map = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-                [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-
 if __name__ == "__main__":
     init = Node((1, 1))
     goal = Node((130, 130))
-    P = Path(init, goal, map_env=big_map, dq=6, robot_size=0, max_iter=10000)
-    P.generate(optimize=False)
-    P.smoothPath(alpha=0.75, nb_points=10, optimized=False)
+    map = Map.big_map
+    P = Path(init, goal, map_env=map, dq=6, robot_size=1, max_iter=10000)
+    P.generate(optimize=True, smooth=True, alpha=0.75, nb_points=5)
 
-    path = P.getPath("original", init=True)
+    path = P.getPath("optimized", init=True)
     x = [pos[0] for pos in path]
     y = [pos[1] for pos in path]
-    plt.plot(y, x, 'c', label="Orignial")
+    plt.plot(y, x, 'c', label="Optimized")
 
     path = P.getPath("smooth", init=True)
     x = [pos[0] for pos in path]
@@ -244,6 +246,6 @@ if __name__ == "__main__":
 
     plt.legend()
 
-    plt.imshow(big_map)
+    plt.imshow(map)
 
     plt.show()
