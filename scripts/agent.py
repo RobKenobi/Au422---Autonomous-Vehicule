@@ -7,6 +7,7 @@ from geometry_msgs.msg import Pose2D, Twist
 from nav_msgs.msg import Path
 import tf
 
+
 class Agent:
     def __init__(self):
         self.listener = tf.TransformListener()
@@ -19,7 +20,6 @@ class Agent:
         self.timer_pose = rospy.Timer(rospy.Duration(0.5), self.poseCb)
         self.timer_follower = rospy.Timer(rospy.Duration(0.1), self.moveToGoal)
 
-
     def poseCb(self, event):
         """ Get the current position of the robot each 500ms """
         try:
@@ -31,18 +31,15 @@ class Agent:
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             print("Could not transform /base_footprint to /map")
 
-
     def plannerCb(self, msg):
         self.reached, self.goal_received = False, True
-        self.path = msg.poses[1:]   #remove the robot's pose
-
+        self.path = msg.poses[1:]  # remove the robot's pose
 
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
             pass
-            #Add your strategy here
+            # Add your strategy here
 
-    
     def send_velocities(self):
         self.linear = self.constraint(self.linear, minimum=-2.0, maximum=2.0)
         self.angular = self.constraint(self.angular)
@@ -52,17 +49,16 @@ class Agent:
         cmd_vel.angular.z = self.angular
         self.vel_pub.publish(cmd_vel)
 
-
     def constraint(self, val, minimum=-1.0, maximum=1.0):
         if val < minimum:
             return minimum
         if val > maximum:
             return maximum
         return val
-    
+
 
 if __name__ == "__main__":
-    rospy.init_node("agent_node", anonymous=True)    
+    rospy.init_node("agent_node", anonymous=True)
 
     node = Agent()
 

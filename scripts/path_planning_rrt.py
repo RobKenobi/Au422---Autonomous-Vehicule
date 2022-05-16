@@ -9,7 +9,6 @@ import tf
 import numpy as np
 import cv2
 
-
 import rrt_package as rr
 
 
@@ -22,7 +21,7 @@ class RRT:
         # TO DO: add your attributes here....
 
         self.dq = dq
-        self.pos = (self.robot_pose.x, self.robot_pose.y)
+        self.pos = [self.robot_pose.x, self.robot_pose.y]
 
         """ Publishers and Subscribers """
         rospy.Timer(rospy.Duration(secs=0.5), self.poseCb)
@@ -32,7 +31,6 @@ class RRT:
 
         """ Load the map and create the related image"""
         self.getMap()
-
 
     # **********************************
 
@@ -51,13 +49,12 @@ class RRT:
             self.map_resolution = self.map.info.resolution
             self.map_origin = (-self.map.info.origin.position.x, -self.map.info.origin.position.y)
 
-
             self.map_width = self.map.info.width
             self.map_height = self.map.info.height
             print(f"MAP WIDTH {self.map_width}\nMAP HEIGHT {self.map_height}")
             self.img_map = np.array(self.map.data).reshape(
                 (self.map_width, self.map_height))
-            #np.save("map", self.img_map)
+            # np.save("map", self.img_map)
             print("Map received !")
             self.img_map = self.img_map * 64 / 255
             cv2.imwrite('Map_img.jpg', self.img_map)
@@ -89,7 +86,7 @@ class RRT:
         xgoal = msg.pose.position.x
         ygoal = msg.pose.position.y
 
-        self.goal = (xgoal, ygoal)
+        self.goal = [xgoal, ygoal]
 
         print(f"GOAL : \tx = {xgoal}\ty = {ygoal}")
         self.run()
@@ -115,7 +112,8 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-            self.image_pos = (1/self.map_resolution * self.map_origin[0], -1/self.map_resolution * self.map_origin[1] + self.map_height)
+            self.image_pos = (1 / self.map_resolution * self.map_origin[0],
+                              -1 / self.map_resolution * self.map_origin[1] + self.map_height)
             pose.pose.position.x = self.map_resolution * (pose_img[0] - self.map_origin[0])
             pose.pose.position.y = self.map_resolution * (-pose_img[1] - self.map_origin[1] + self.map_height)
             path_RVIZ.append(pose)
