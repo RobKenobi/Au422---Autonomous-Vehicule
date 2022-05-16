@@ -178,7 +178,10 @@ class Path:
             if smooth:
                 self.smoothPath(alpha, nb_points, optimized=optimize)
         else:
-            print("Maximum iterations reached.\n The object might be too big for the environment.")
+            print("Maximum iterations reached.\n"
+                  "Possibles causes : "
+                  " - The robot might be too big for the environment."
+                  " - The goal might be unreachable.")
 
     def optimize(self):
         origin = self.init_node.getPos()
