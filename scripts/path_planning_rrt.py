@@ -33,6 +33,7 @@ class RRT:
         """ Load the map and create the related image"""
         self.getMap()
 
+
     # **********************************
 
     def getMap(self):
@@ -50,12 +51,13 @@ class RRT:
             self.map_resolution = self.map.info.resolution
             self.map_origin = (-self.map.info.origin.position.x, -self.map.info.origin.position.y)
 
+
             self.map_width = self.map.info.width
             self.map_height = self.map.info.height
             print(f"MAP WIDTH {self.map_width}\nMAP HEIGHT {self.map_height}")
             self.img_map = np.array(self.map.data).reshape(
                 (self.map_width, self.map_height))
-            # np.save("map", self.img_map)
+            #np.save("map", self.img_map)
             print("Map received !")
             self.img_map = self.img_map * 64 / 255
             cv2.imwrite('Map_img.jpg', self.img_map)
@@ -87,7 +89,7 @@ class RRT:
         xgoal = msg.pose.position.x
         ygoal = msg.pose.position.y
 
-        self.goal = (xgoal, ygoal)
+        self.goal = [xgoal, ygoal]
 
         print(f"GOAL : \tx = {xgoal}\ty = {ygoal}")
         self.run()
