@@ -1,5 +1,5 @@
-from Node import Node
-import Map
+from rrt_dev.Node import Node
+import rrt_dev.Map
 import numpy as np
 
 
@@ -47,7 +47,7 @@ class SmoothTurn:
 
 
 class Path:
-    def __init__(self, init_node=Node(), goal_node=Node(), map_env=Map.big_map, dq=2, robot_size=3, max_iter=1000):
+    def __init__(self, init_node=Node(), goal_node=Node(), map_env=rrt_dev.Map.big_map, dq=2, robot_size=3, max_iter=1000):
         if not isinstance(init_node, Node):
             raise TypeError("init_node type must be Node")
 
@@ -155,9 +155,7 @@ class Path:
         return Node((x, y), nearest_point)
 
     def generate(self, optimize=False, smooth=False, alpha=0.75, nb_points=10):
-        if alpha < 0.5:  # must be greater than 0.5
-            alpha = 0.51
-
+        alpha = max(0.5, alpha)
         node = self.init_node
         while node.getPos() != self.goal_node.getPos() and self.max_iter:
             self.max_iter -= 1
@@ -208,7 +206,6 @@ class Path:
                         alpha = min(alpha + 0.1, 1)
                         break
                 valid = True
-            # TODO vérifier que le virage ne passe pas à travers un obstacle
 
             self.smooth_path.extend(p)
             prev = path_to_smooth[i]
@@ -233,12 +230,12 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     init = Node((1, 1))
-    goal = Node((130, 130))
-    map = Map.big_map
+    goal = Node((17, 17))
+    map = Map.DEFAULT_MAP1
     P = Path(init, goal, map_env=map, dq=6, robot_size=1, max_iter=10000)
-    P.generate(optimize=True, smooth=True, alpha=0.5, nb_points=5)
+    P.generate(optimize=False, smooth=True, alpha=0.5, nb_points=5)
 
-    path = P.getPath("optimized", init=True)
+    path = P.getPath("original", init=True)
     x = [pos[0] for pos in path]
     y = [pos[1] for pos in path]
     plt.plot(y, x, 'c', label="Optimized")
