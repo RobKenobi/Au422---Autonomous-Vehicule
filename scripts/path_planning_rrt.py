@@ -97,7 +97,7 @@ class RRT:
     # **********************************
 
     def run(self):
-        init_node = rr.Node((self.pos.x, self.pos.y))
+        init_node = rr.Node((self.pos[0], self.pos[1]))
         goal_node = rr.Node(self.goal)
         map = self.map
         dq = self.dq
