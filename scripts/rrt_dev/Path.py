@@ -57,6 +57,8 @@ class Path:
         try:
             if len(map_env.shape) != 2:
                 raise ValueError("map_env must be a 2D-array")
+            if goal_node.getPos('x') < 0 or goal_node.getPos('x')>map_env.shape[0] or goal_node.get('y')<0 or goal_node.getPos('y')>map_env.shape[1]:
+                raise ValueError(goal_node.getPos(), " is not on the map")
         except:
             raise TypeError("map_env type must be numpy.ndarray")
 
@@ -176,7 +178,10 @@ class Path:
             if smooth:
                 self.smoothPath(alpha, nb_points, optimized=optimize)
         else:
-            print("Maximum iterations reached.\n The object might be too big for the environment.")
+            print("Maximum iterations reached.\n"
+                  "Possibles causes : "
+                  " - The robot might be too big for the environment."
+                  " - The goal might be unreachable.")
 
     def optimize(self):
         origin = self.init_node.getPos()
