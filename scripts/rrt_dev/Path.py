@@ -1,5 +1,5 @@
-from Node import Node
-import Map
+from rrt_dev.Node import Node
+import rrt_dev.Map
 import numpy as np
 
 
