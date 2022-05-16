@@ -57,6 +57,8 @@ class Path:
         try:
             if len(map_env.shape) != 2:
                 raise ValueError("map_env must be a 2D-array")
+            if goal_node.getPos('x') < 0 or goal_node.getPos('x')>map_env.shape[0] or goal_node.get('y')<0 or goal_node.getPos('y')>map_env.shape[1]:
+                raise ValueError(goal_node.getPos(), " is not on the map")
         except:
             raise TypeError("map_env type must be numpy.ndarray")
 

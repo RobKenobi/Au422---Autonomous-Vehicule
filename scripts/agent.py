@@ -33,7 +33,7 @@ class Agent:
 
     def plannerCb(self, msg):
         self.reached, self.goal_received = False, True
-        self.path = msg.poses[1:]  # remove the robot's pose
+        self.path = msg.poses
 
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
