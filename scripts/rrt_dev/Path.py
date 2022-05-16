@@ -47,7 +47,8 @@ class SmoothTurn:
 
 
 class Path:
-    def __init__(self, init_node=Node(), goal_node=Node(), map_env=rrt_dev.Map.big_map, dq=2, robot_size=3, max_iter=1000):
+    def __init__(self, init_node=Node(), goal_node=Node(), map_env=rrt_dev.Map.big_map, dq=2, robot_size=3,
+                 max_iter=1000):
         if not isinstance(init_node, Node):
             raise TypeError("init_node type must be Node")
 
@@ -57,10 +58,12 @@ class Path:
         try:
             if len(map_env.shape) != 2:
                 raise ValueError("map_env must be a 2D-array")
-            if goal_node.getPos('x') < 0 or goal_node.getPos('x')>map_env.shape[0] or goal_node.get('y')<0 or goal_node.getPos('y')>map_env.shape[1]:
-                raise ValueError(goal_node.getPos(), " is not on the map")
         except:
             raise TypeError("map_env type must be numpy.ndarray")
+
+        if goal_node.getPos('x') < 0 or goal_node.getPos('x') > map_env.shape[0] or goal_node.getPos(
+                'y') < 0 or goal_node.getPos('y') > map_env.shape[1]:
+            raise ValueError(goal_node.getPos(), " is not on the map")
 
         if not isinstance(dq, int):
             raise ValueError("qd type must be int")
@@ -186,7 +189,7 @@ class Path:
     def optimize(self):
         origin = self.init_node.getPos()
         path = self.original_path.copy()
-        offset = 1
+        offset = 0
         while origin != self.goal_node.getPos():
             possibility = [path[offset]]
             for i in range(offset + 1, len(path)):

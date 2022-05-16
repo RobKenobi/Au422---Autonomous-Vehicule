@@ -20,6 +20,10 @@ class Agent:
         self.timer_pose = rospy.Timer(rospy.Duration(0.5), self.poseCb)
         self.timer_follower = rospy.Timer(rospy.Duration(0.1), self.moveToGoal)
 
+        self.linear = 0
+        self.angular = 0
+        self.path = list()
+
     def poseCb(self, event):
         """ Get the current position of the robot each 500ms """
         try:
@@ -33,10 +37,16 @@ class Agent:
 
     def plannerCb(self, msg):
         self.reached, self.goal_received = False, True
-        self.path = msg.poses
+        list_PoseStamped = msg.poses
+        self.path = list(map(lambda pose: pose.position[:2], list_PoseStamped))
+
+        # Remove robot position if in the list
+        if self.path[0] == self.robot_pose[:2]:
+            self.path.pop(0)
 
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
+
             pass
             # Add your strategy here
 
