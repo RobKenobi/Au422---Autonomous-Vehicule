@@ -97,8 +97,10 @@ class RRT:
 
     
     def m2p(self,x,y):
-        x = int(1/self.map_resolution * (x - self.map_origin[0]))
-        y = int(1/self.map_resolution * (-y - self.map_origin[1] + self.map_height))
+        
+        x = int((x+self.map_origin[0])*1/self.map_resolution)
+        y = self.map_height-int((-y+self.map_origin[1])*1/self.map_resolution)
+        print(x,y)
         return (x,y)
         
 
@@ -106,14 +108,19 @@ class RRT:
         init_node = rr.Node(self.m2p(self.pos[0], self.pos[1]))
         goal_node = rr.Node(self.m2p(self.goal[0],self.goal[1]))
         print(goal_node.getPos())
-        _map = np.array(self.map.data).reshape((self.map_width, self.map_height))
+        _map = np.array(self.map.data)
+        _map = np.where(_map!=0,1,0)
+        _map = _map.reshape((self.map_height, self.map_width))
+
+        
+        
         dq = self.dq
         robot_size = 5
         max_iter = self.max_iter
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
-        P.generate(optimize=True, smooth=False)
-        self.path = P.getPath("optimized")
+        P.generate(optimize=False, smooth=False)
+        self.path = P.getPath("original")
         print(self.path,file=sys.stderr)
 
         self.publishPath()
@@ -130,7 +137,9 @@ class RRT:
         for pose_img in self.path:
             pose = PoseStamped()
             #self.image_pos = (1 / self.map_resolution * self.map_origin[0], -1 / self.map_resolution * self.map_origin[1] + self.map_height)
-            pose.pose.position.x,pose.pose.position.y = self.m2p(pose_img[0],pose_img[1])
+            
+            pose.pose.position.x = pose_img[0]
+            pose.pose.position.y = pose_img[1]
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
@@ -140,6 +149,6 @@ if __name__ == '__main__':
     # DO NOT TOUCH
     rospy.init_node("RRT", anonymous=True)
 
-    rrt = RRT(K=10000)
+    rrt = RRT(K=10000000)
 
     rospy.spin()

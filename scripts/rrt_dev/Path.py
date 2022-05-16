@@ -181,7 +181,7 @@ class Path:
     def optimize(self):
         origin = self.init_node.getPos()
         path = self.original_path.copy()
-        offset = 1
+        offset = 0
         while origin != self.goal_node.getPos():
             possibility = [path[offset]]
             for i in range(offset + 1, len(path)):
