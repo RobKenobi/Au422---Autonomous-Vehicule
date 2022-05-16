@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import sys
 import rospy
 from geometry_msgs.msg import PoseStamped, Pose2D
 from nav_msgs.srv import GetMap
@@ -47,7 +47,6 @@ class RRT:
             get_map = rospy.ServiceProxy('/static_map', GetMap)
 
             self.map = get_map().map
-
             self.map_resolution = self.map.info.resolution
             self.map_origin = (-self.map.info.origin.position.x, -self.map.info.origin.position.y)
 
@@ -60,11 +59,11 @@ class RRT:
             #np.save("map", self.img_map)
             print("Map received !")
             self.img_map = self.img_map * 64 / 255
-            cv2.imwrite('Map_img.jpg', self.img_map)
-            self.img_out = cv2.imread('Map_img.jpg', 0)
-            cv2.imshow("IMAGE_MAP", 255 - self.img_out)
+            #cv2.imwrite('Map_img.jpg', self.img_map)
+            #self.img_out = cv2.imread('Map_img.jpg', 0)
+            #cv2.imshow("IMAGE_MAP", 255 - self.img_out)
             # cv2.imshow("IMAGE_MAP", cv2.bitwise_not(self.img_map))
-            cv2.waitKey()
+            #cv2.waitKey()
 
         except rospy.ServiceException as e:
             print(f"Map service call failed: {e}")
@@ -96,17 +95,26 @@ class RRT:
 
     # **********************************
 
+    
+    def m2p(self,x,y):
+        x = int(1/self.map_resolution * (x - self.map_origin[0]))
+        y = int(1/self.map_resolution * (-y - self.map_origin[1] + self.map_height))
+        return (x,y)
+        
+
     def run(self):
-        init_node = rr.Node((self.pos[0], self.pos[1]))
-        goal_node = rr.Node(self.goal)
-        map = self.map
+        init_node = rr.Node(self.m2p(self.pos[0], self.pos[1]))
+        goal_node = rr.Node(self.m2p(self.goal[0],self.goal[1]))
+        print(goal_node.getPos())
+        _map = np.array(self.map.data).reshape((self.map_width, self.map_height))
         dq = self.dq
         robot_size = 5
         max_iter = self.max_iter
 
-        P = rr.Path(init_node, goal_node, map, dq, robot_size, max_iter)
+        P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
         P.generate(optimize=True, smooth=False)
         self.path = P.getPath("optimized")
+        print(self.path,file=sys.stderr)
 
         self.publishPath()
 
@@ -121,10 +129,8 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-            self.image_pos = (1 / self.map_resolution * self.map_origin[0],
-                              -1 / self.map_resolution * self.map_origin[1] + self.map_height)
-            pose.pose.position.x = self.map_resolution * (pose_img[0] - self.map_origin[0])
-            pose.pose.position.y = self.map_resolution * (-pose_img[1] - self.map_origin[1] + self.map_height)
+            #self.image_pos = (1 / self.map_resolution * self.map_origin[0], -1 / self.map_resolution * self.map_origin[1] + self.map_height)
+            pose.pose.position.x,pose.pose.position.y = self.m2p(pose_img[0],pose_img[1])
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
@@ -134,6 +140,6 @@ if __name__ == '__main__':
     # DO NOT TOUCH
     rospy.init_node("RRT", anonymous=True)
 
-    rrt = RRT()
+    rrt = RRT(K=10000)
 
     rospy.spin()
