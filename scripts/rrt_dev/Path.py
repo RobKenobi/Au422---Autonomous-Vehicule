@@ -61,8 +61,8 @@ class Path:
         except:
             raise TypeError("map_env type must be numpy.ndarray")
 
-        if goal_node.getPos('x') < 0 or goal_node.getPos('x') > map_env.shape[0] or goal_node.getPos(
-                'y') < 0 or goal_node.getPos('y') > map_env.shape[1]:
+        if goal_node.getPos('x') < 0 or goal_node.getPos('x') > map_env.shape[1] or goal_node.getPos(
+                'y') < 0 or goal_node.getPos('y') > map_env.shape[0]:
             raise ValueError(goal_node.getPos(), " is not on the map")
 
         if not isinstance(dq, int):
@@ -239,8 +239,8 @@ if __name__ == "__main__":
 
     init = Node((1, 1))
     goal = Node((17, 17))
-    map = Map.DEFAULT_MAP1
-    P = Path(init, goal, map_env=map, dq=6, robot_size=1, max_iter=10000)
+    _map = Map.DEFAULT_MAP1
+    P = Path(init, goal, map_env=_map, dq=6, robot_size=1, max_iter=10000)
     P.generate(optimize=False, smooth=True, alpha=0.5, nb_points=5)
 
     path = P.getPath("original", init=True)

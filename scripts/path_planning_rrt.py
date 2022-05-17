@@ -13,7 +13,7 @@ import rrt_dev as rr
 
 
 class RRT:
-    def __init__(self, K=0, dq=5):
+    def __init__(self, K=0, dq=40):
         """ Attributes """
         self.robot_pose = Pose2D()
         self.path = []
@@ -78,6 +78,8 @@ class RRT:
                 "/map", "/base_footprint", rospy.Time(0))
             self.robot_pose.x = trans[0]
             self.robot_pose.y = trans[1]
+            self.pos = (self.robot_pose.x, self.robot_pose.y)
+
             print(f"Robot's pose: {self.robot_pose.x}, {self.robot_pose.y}")
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             print("Could not transform /base_footprint to /map")
@@ -107,20 +109,20 @@ class RRT:
     def run(self):
         init_node = rr.Node(self.m2p(self.pos[0], self.pos[1]))
         goal_node = rr.Node(self.m2p(self.goal[0],self.goal[1]))
+        print(init_node.getPos())
         print(goal_node.getPos())
         _map = np.array(self.map.data)
         _map = np.where(_map!=0,1,0)
         _map = _map.reshape((self.map_height, self.map_width))
 
         
-        
         dq = self.dq
-        robot_size = 5
+        robot_size = 10
         max_iter = self.max_iter
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
-        P.generate(optimize=False, smooth=False)
-        self.path = P.getPath("original")
+        P.generate(optimize=True, smooth=True)
+        self.path = P.getPath("smooth",init=True)
         print(self.path,file=sys.stderr)
 
         self.publishPath()
@@ -138,8 +140,8 @@ class RRT:
             pose = PoseStamped()
             #self.image_pos = (1 / self.map_resolution * self.map_origin[0], -1 / self.map_resolution * self.map_origin[1] + self.map_height)
             
-            pose.pose.position.x = pose_img[0]
-            pose.pose.position.y = pose_img[1]
+            pose.pose.position.x = self.map_resolution*pose_img[0] - self.map_origin[0]
+            pose.pose.position.y = self.map_resolution*(pose_img[1]-self.map_height)+self.map_origin[1]
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
@@ -149,6 +151,6 @@ if __name__ == '__main__':
     # DO NOT TOUCH
     rospy.init_node("RRT", anonymous=True)
 
-    rrt = RRT(K=10000000)
+    rrt = RRT(K=100000)
 
     rospy.spin()
