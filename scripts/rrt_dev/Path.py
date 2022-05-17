@@ -242,15 +242,9 @@ if __name__ == "__main__":
 
     init = Node((1, 1))
     goal = Node((17, 17))
-<<<<<<< HEAD
-    _map = Map.DEFAULT_MAP1
-    P = Path(init, goal, map_env=_map, dq=6, robot_size=1, max_iter=10000)
-    P.generate(optimize=False, smooth=True, alpha=0.5, nb_points=5)
-=======
-    map = Map.DEFAULT_MAP1
+    map = rrt_dev.Map.DEFAULT_MAP1
     P = Path(init, goal, map_env=map, dq=6, robot_size=2, max_iter=10000)
     P.generate(optimize=True, smooth=True, alpha=0.5, nb_points=5)
->>>>>>> 4d8572a0fbe9a50083df4acb57fbf2f70cc4414f
 
     path = P.getPath("original", init=True)
     x = [pos[0] for pos in path]
