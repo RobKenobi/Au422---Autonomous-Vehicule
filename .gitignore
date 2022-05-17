@@ -1,4 +1,5 @@
-scripts/rrt_dev/__pycache__/
+/scripts/rrt_dev/__pycache__/
+/scripts/rrt_package/__pycache__/
 /.idea/.gitignore
 /.idea/Au422---Autonomous-Vehicule.iml
 /.idea/misc.xml
