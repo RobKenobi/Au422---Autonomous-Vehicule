@@ -50,7 +50,7 @@ class SmoothTurn:
 
 
 class Path:
-    def __init__(self, init_node=Node(), goal_node=Node(), map_env=Map.big_map, dq=2, robot_size=3,
+    def __init__(self, init_node=Node(), goal_node=Node(), map_env=rrt_dev.Map.big_map, dq=2, robot_size=3,
                  max_iter=1000):
         if not isinstance(init_node, Node):
             raise TypeError("init_node type must be Node")

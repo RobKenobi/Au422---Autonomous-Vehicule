@@ -47,7 +47,8 @@ class RRT:
 
             self.map = get_map().map
             self.map_resolution = self.map.info.resolution
-            self.map_origin = (-self.map.info.origin.position.x, -self.map.info.origin.position.y)
+            self.map_origin = (-self.map.info.origin.position.x, -
+                               self.map.info.origin.position.y)
 
             self.map_width = self.map.info.width
             self.map_height = self.map.info.height
@@ -98,7 +99,8 @@ class RRT:
     def m2p(self, x, y):
 
         x = int((x + self.map_origin[0]) * 1 / self.map_resolution)
-        y = self.map_height - int((-y + self.map_origin[1]) * 1 / self.map_resolution)
+        y = self.map_height - \
+            int((-y + self.map_origin[1]) * 1 / self.map_resolution)
         print(x, y)
         return (x, y)
 
@@ -116,7 +118,7 @@ class RRT:
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
         P.generate(optimize=True, smooth=True)
-        self.path = P.getPath("smooth")
+        self.path = P.getPath("smooth",init=True)
         print(self.path, file=sys.stderr)
 
         self.publishPath()
@@ -134,8 +136,10 @@ class RRT:
             pose = PoseStamped()
             # self.image_pos = (1 / self.map_resolution * self.map_origin[0], -1 / self.map_resolution * self.map_origin[1] + self.map_height)
 
-            pose.pose.position.x = pose_img[0]
-            pose.pose.position.y = pose_img[1]
+            pose.pose.position.x = self.map_resolution * \
+                pose_img[0] - self.map_origin[0]
+            pose.pose.position.y = self.map_resolution * \
+                (pose_img[1]-self.map_height)+self.map_origin[1]
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
