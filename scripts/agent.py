@@ -13,6 +13,8 @@ class Agent:
         self.listener = tf.TransformListener()
 
         self.robot_pose = Pose2D()
+        self.pos = self.robot_pose[:2]
+        self.orient = self.robot_pose[-1]
         self.goal_received, self.reached = False, False
 
         self.path_sub = rospy.Subscriber("path", Path, self.plannerCb, queue_size=1)
@@ -41,12 +43,11 @@ class Agent:
         self.path = list(map(lambda pose: pose.position[:2], list_PoseStamped))
 
         # Remove robot position if in the list
-        if self.path[0] == self.robot_pose[:2]:
+        if self.path[0] == self.pos:
             self.path.pop(0)
 
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
-
             pass
             # Add your strategy here
 
