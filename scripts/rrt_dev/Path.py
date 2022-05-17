@@ -1,6 +1,9 @@
 from rrt_dev.Node import Node
 import rrt_dev.Map
+# from Node import Node
+# import Map
 import numpy as np
+import sys
 
 
 def gen_point(width, height):
@@ -47,7 +50,7 @@ class SmoothTurn:
 
 
 class Path:
-    def __init__(self, init_node=Node(), goal_node=Node(), map_env=rrt_dev.Map.big_map, dq=2, robot_size=3,
+    def __init__(self, init_node=Node(), goal_node=Node(), map_env=Map.big_map, dq=2, robot_size=3,
                  max_iter=1000):
         if not isinstance(init_node, Node):
             raise TypeError("init_node type must be Node")
@@ -77,31 +80,31 @@ class Path:
         self.init_node = init_node
         self.goal_node = goal_node
 
-        self.map = map_env
-        self.plot_map = self.map.copy()
-
         self.dq = dq
         self.robot_size = robot_size
 
         self.max_iter = max_iter
 
         self.list_nodes = [self.init_node]
-        self.obstacle = 1
         self.optimized = False
         self.original_path = list()
         self.optimized_path = list()
         self.smooth_path = list()
 
-    def free_square(self, x, y):
-        width, height = self.map.shape
-        x_min = round(x) - self.robot_size
-        x_max = round(x) + self.robot_size + 1
-        y_min = round(y) - self.robot_size
-        y_max = round(y) + self.robot_size + 1
+        self.obstacle = 1
+        self.map = map_env
+        self.plot_map = self.map.copy()
+        self.generate_free_space()
 
-        if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
-            return False
-        return not np.any(self.map[x_min:x_max, y_min:y_max])
+    def generate_free_space(self):
+        x, y = np.where(self.map == self.obstacle)
+        l, c = self.map.shape
+        for i, j in zip(x, y):
+            x_min = max(0, i - self.robot_size)
+            x_max = min(l, i + self.robot_size + 1)
+            y_min = max(0, j - self.robot_size)
+            y_max = min(c, j + self.robot_size + 1)
+            self.map[x_min:x_max, y_min:y_max] = self.obstacle
 
     def no_obstacle_on_line(self, pos1, pos2):
         x1, y1 = pos1
@@ -122,7 +125,7 @@ class Path:
             return False
 
         for x, y in zip(to_check_x, to_check_y):
-            if not self.free_square(x, y):
+            if self.map[x, y] == self.obstacle:
                 return False
         return True
 
@@ -150,7 +153,7 @@ class Path:
             y = saturation(int(y_parent + (self.dq * np.sin(theta))), height - 1)
 
             # Checking that the new point is not near an obstacle
-            if not self.free_square(x, y):
+            if self.map[x, y] == self.obstacle:
                 return None
 
             # Checking the path between the new node and its parent
@@ -182,9 +185,9 @@ class Path:
                 self.smoothPath(alpha, nb_points, optimized=optimize)
         else:
             print("Maximum iterations reached.\n"
-                  "Possibles causes : "
-                  " - The robot might be too big for the environment."
-                  " - The goal might be unreachable.")
+                  "Possibles causes : \n"
+                  " - The robot might be too big for the environment.\n"
+                  " - The goal might be unreachable.\n", file=sys.stderr)
 
     def optimize(self):
         origin = self.init_node.getPos()
@@ -210,7 +213,7 @@ class Path:
                 turn = SmoothTurn([prev, path_to_smooth[i], path_to_smooth[i + 1]], alpha, nb_points)
                 p = turn.generate()
                 for pos in p:
-                    if not self.free_square(pos[0], pos[1]):
+                    if self.map[round(pos[0]), round(pos[1])] == self.obstacle:
                         alpha = min(alpha + 0.1, 1)
                         break
                 valid = True
@@ -240,13 +243,13 @@ if __name__ == "__main__":
     init = Node((1, 1))
     goal = Node((17, 17))
     map = Map.DEFAULT_MAP1
-    P = Path(init, goal, map_env=map, dq=6, robot_size=1, max_iter=10000)
-    P.generate(optimize=False, smooth=True, alpha=0.5, nb_points=5)
+    P = Path(init, goal, map_env=map, dq=6, robot_size=2, max_iter=10000)
+    P.generate(optimize=True, smooth=True, alpha=0.5, nb_points=5)
 
     path = P.getPath("original", init=True)
     x = [pos[0] for pos in path]
     y = [pos[1] for pos in path]
-    plt.plot(y, x, 'c', label="Optimized")
+    plt.plot(y, x, 'c', label="optimized")
 
     path = P.getPath("smooth", init=True)
     x = [pos[0] for pos in path]
