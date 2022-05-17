@@ -13,7 +13,7 @@ import rrt_dev as rr
 
 
 class RRT:
-    def __init__(self, K=0, dq=40):
+    def __init__(self, K=1000, dq=40):
         """ Attributes """
         self.robot_pose = Pose2D()
         self.path = []
@@ -104,35 +104,20 @@ class RRT:
 
     def run(self):
         init_node = rr.Node(self.m2p(self.pos[0], self.pos[1]))
-<<<<<<< HEAD
-        goal_node = rr.Node(self.m2p(self.goal[0],self.goal[1]))
-        print(init_node.getPos())
-=======
         goal_node = rr.Node(self.m2p(self.goal[0], self.goal[1]))
->>>>>>> 4d8572a0fbe9a50083df4acb57fbf2f70cc4414f
         print(goal_node.getPos())
         _map = np.array(self.map.data)
         _map = np.where(_map != 0, 1, 0)
         _map = _map.reshape((self.map_height, self.map_width))
 
-<<<<<<< HEAD
-        
-=======
->>>>>>> 4d8572a0fbe9a50083df4acb57fbf2f70cc4414f
         dq = self.dq
         robot_size = 10
         max_iter = self.max_iter
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
-<<<<<<< HEAD
         P.generate(optimize=True, smooth=True)
-        self.path = P.getPath("smooth",init=True)
-        print(self.path,file=sys.stderr)
-=======
-        P.generate(optimize=False, smooth=False)
-        self.path = P.getPath("original")
+        self.path = P.getPath("smooth")
         print(self.path, file=sys.stderr)
->>>>>>> 4d8572a0fbe9a50083df4acb57fbf2f70cc4414f
 
         self.publishPath()
 
@@ -147,17 +132,10 @@ class RRT:
         path_RVIZ = []
         for pose_img in self.path:
             pose = PoseStamped()
-<<<<<<< HEAD
-            #self.image_pos = (1 / self.map_resolution * self.map_origin[0], -1 / self.map_resolution * self.map_origin[1] + self.map_height)
-            
-            pose.pose.position.x = self.map_resolution*pose_img[0] - self.map_origin[0]
-            pose.pose.position.y = self.map_resolution*(pose_img[1]-self.map_height)+self.map_origin[1]
-=======
             # self.image_pos = (1 / self.map_resolution * self.map_origin[0], -1 / self.map_resolution * self.map_origin[1] + self.map_height)
 
             pose.pose.position.x = pose_img[0]
             pose.pose.position.y = pose_img[1]
->>>>>>> 4d8572a0fbe9a50083df4acb57fbf2f70cc4414f
             path_RVIZ.append(pose)
         msg.poses = path_RVIZ
         self.pathPub.publish(msg)
