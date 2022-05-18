@@ -9,6 +9,7 @@ import tf
 import numpy as np
 import cv2
 
+import sys
 import rrt_dev as rr
 
 
@@ -38,9 +39,7 @@ class RRT:
     def getMap(self):
         """ Call the static_map service and then get the map """
         print("Waiting for map service to be available...")
-
         rospy.wait_for_service('/static_map')
-        print("On est là")
         try:
 
             get_map = rospy.ServiceProxy('/static_map', GetMap)
@@ -54,8 +53,10 @@ class RRT:
             self.map_height = self.map.info.height
             print(f"MAP WIDTH {self.map_width}\nMAP HEIGHT {self.map_height}")
             self.img_map = np.array(self.map.data).reshape(
-                (self.map_width, self.map_height))
-            # np.save("map", self.img_map)
+                (self.map_height, self.map_width), order='A')
+
+            np.save("map", self.img_map)
+            print("MAP SAVED" )
             print("Map received !")
             self.img_map = self.img_map * 64 / 255
             # cv2.imwrite('Map_img.jpg', self.img_map)
@@ -118,7 +119,7 @@ class RRT:
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
         P.generate(optimize=True, smooth=True)
-        self.path = P.getPath("smooth",init=True)
+        self.path = P.getPath("smooth", init=True)
         print(self.path, file=sys.stderr)
 
         self.publishPath()
