@@ -63,24 +63,6 @@ class Agent:
         self.point_to_reach = self.path.pop(0)
         self.point_reached = False
 
-        # TODO ça n'a rien à faire ici
-
-        if len(self.path) == 0:
-            self.reached = True
-            self.linear = 0
-            self.angular = 0
-            self.send_velocities()
-            print("The goal has been reached")
-        else:
-            try:
-                if math.dist(self.path[0], self.pos) < 0.1:
-                    self.path.pop(0)
-                    self.linear = 0
-                    self.angular = 0
-                    self.send_velocities()
-                    print("STOP")
-            except:
-                pass
 
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
