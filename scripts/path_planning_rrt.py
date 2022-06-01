@@ -80,7 +80,7 @@ class RRT:
             self.robot_pose.y = trans[1]
             self.pos = (self.robot_pose.x, self.robot_pose.y)
 
-            print(f"Robot's pose: {self.robot_pose.x}, {self.robot_pose.y}")
+            #print(f"Robot's pose: {self.robot_pose.x:.2f}, {self.robot_pose.y:.2f}, {self.robot_pose.theta:.2f}")
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             print("Could not transform /base_footprint to /map")
 
@@ -118,8 +118,8 @@ class RRT:
         max_iter = self.max_iter
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
-        P.generate(optimize=True, smooth=True)
-        self.path = P.getPath("smooth", init=True)
+        P.generate(optimize=False, smooth=False)
+        self.path = P.getPath("original",init=True)
         print(self.path, file=sys.stderr)
 
         self.publishPath()
