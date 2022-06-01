@@ -23,7 +23,8 @@ class Agent:
             "path", Path, self.plannerCb, queue_size=1)
         self.vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         self.timer_pose = rospy.Timer(rospy.Duration(0.5), self.poseCb)
-        self.timer_follower = rospy.Timer(rospy.Duration(0.1), self.moveToGoal)  # 0.1 sec
+        self.timer_follower = rospy.Timer(
+            rospy.Duration(0.1), self.moveToGoal)  # 0.1 sec
 
         self.linear = 0
         self.angular = 0
@@ -53,8 +54,9 @@ class Agent:
     def plannerCb(self, msg):
         self.reached, self.goal_received = False, True
         list_PoseStamped = msg.poses
-        self.path = list(map(lambda pose: (pose.pose.position.x, pose.pose.position.y), list_PoseStamped))
-
+        self.path = list(map(lambda pose: (pose.pose.position.x,
+                         pose.pose.position.y), list_PoseStamped))
+        print(f"Chemin agent.py : {self.path}")
         # Remove robot position if in the list
         robot_pose = (self.robot_pose.x, self.robot_pose.y)
         if robot_pose in self.path:
@@ -63,15 +65,15 @@ class Agent:
         self.point_to_reach = self.path.pop(0)
         self.point_reached = False
 
-
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
 
             # Strategy
 
             # We import the actual position of the robot
-            [x, y, yaw] = [self.robot_pose.x, self.robot_pose.y, self.robot_pose.theta]
-
+            [x, y, yaw] = [self.robot_pose.x,
+                           self.robot_pose.y, self.robot_pose.theta]
+            print("La position du robot : ", x, y)
             if math.dist((x, y), self.point_to_reach) < 0.1:
                 self.angular = 0
                 self.linear = 0
@@ -83,23 +85,26 @@ class Agent:
                     self.reached = True
 
             else:
-
                 dx = self.point_to_reach[0] - x
                 dy = self.point_to_reach[1] - y
 
                 dist = math.sqrt(dx ** 2 + dy ** 2)
 
-                self.linear = 2 * dist / 5 + 0.5
+                self.linear = 0
                 # We compute the angle between the reference of the robot and the goal
                 ob = math.atan2(dy, dx)
 
                 angle_error = ob - yaw
+                print(f"Angle error : {angle_error}")
+                if angle_error < 0.01:
+                    self.linear = 0
                 self.error_integration += angle_error * 0.1
 
-                self.angular = 0.8 * angle_error + 0.1 * self.error_integration
+                self.angular = 0.1 * angle_error + 0.01 * self.error_integration
 
             # End of strategy
-
+            print(
+                f"Commandes : {round(self.linear,4)} {round(self.angular,4)}")
             self.send_velocities()
 
     def send_velocities(self):

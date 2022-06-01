@@ -56,7 +56,7 @@ class RRT:
                 (self.map_height, self.map_width), order='A')
 
             np.save("map", self.img_map)
-            print("MAP SAVED" )
+            print("MAP SAVED")
             print("Map received !")
             self.img_map = self.img_map * 64 / 255
             # cv2.imwrite('Map_img.jpg', self.img_map)
@@ -119,8 +119,8 @@ class RRT:
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
         P.generate(optimize=False, smooth=False)
-        self.path = P.getPath("original",init=True)
-        print(self.path, file=sys.stderr)
+        self.path = P.getPath("original", init=True)
+        # print(self.path, file=sys.stderr)
 
         self.publishPath()
 
