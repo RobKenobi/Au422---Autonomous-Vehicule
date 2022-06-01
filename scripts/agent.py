@@ -23,11 +23,16 @@ class Agent:
             "path", Path, self.plannerCb, queue_size=1)
         self.vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
         self.timer_pose = rospy.Timer(rospy.Duration(0.5), self.poseCb)
-        self.timer_follower = rospy.Timer(rospy.Duration(0.1), self.moveToGoal)
+        self.timer_follower = rospy.Timer(rospy.Duration(0.1), self.moveToGoal)  # 0.1 sec
 
         self.linear = 0
         self.angular = 0
+
         self.path = list()
+
+        self.error_integration = 0
+        self.point_reached = True
+        self.point_to_reach = None
 
     def poseCb(self, event):
         """ Get the current position of the robot each 500ms """
@@ -48,10 +53,18 @@ class Agent:
     def plannerCb(self, msg):
         self.reached, self.goal_received = False, True
         list_PoseStamped = msg.poses
-        self.path = list(
-            map(lambda pose: (pose.pose.position.x, pose.pose.position.y), list_PoseStamped))
+        self.path = list(map(lambda pose: (pose.pose.position.x, pose.pose.position.y), list_PoseStamped))
 
         # Remove robot position if in the list
+        robot_pose = (self.robot_pose.x, self.robot_pose.y)
+        if robot_pose in self.path:
+            self.path.remove(robot_pose)
+
+        self.point_to_reach = self.path.pop(0)
+        self.point_reached = False
+
+        # TODO ça n'a rien à faire ici
+
         if len(self.path) == 0:
             self.reached = True
             self.linear = 0
@@ -71,25 +84,37 @@ class Agent:
 
     def moveToGoal(self, event):
         if not self.reached and self.goal_received:
-            goal = self.path[0]
 
             # Strategy
 
             # We import the actual position of the robot
-            [x, y, yaw] = [self.robot_pose.x,self.robot_pose.y, self.robot_pose.theta]
+            [x, y, yaw] = [self.robot_pose.x, self.robot_pose.y, self.robot_pose.theta]
 
-            # We calculate the relative position of the goal and its distance
-            dx = goal[0]-x
-            dy = goal[1]-y
-            dist = (dx**2 + dy**2)**0.5
+            if math.dist((x, y), self.point_to_reach) < 0.1:
+                self.angular = 0
+                self.linear = 0
 
-            # We calculate the angle between the reference of the robot and the goal
-            ob = math.atan2(dy, dx)
+                if len(self.path):
+                    self.point_to_reach = self.path.pop(0)
 
-            #    We calculate the angular velocity by using the angle of the robot and the angle of
-            # the objective in the robot reference
-            self.angular = ob-yaw
-            self.linear = 2*dist/5 + 0.5
+                else:
+                    self.reached = True
+
+            else:
+
+                dx = self.point_to_reach[0] - x
+                dy = self.point_to_reach[1] - y
+
+                dist = math.sqrt(dx ** 2 + dy ** 2)
+
+                self.linear = 2 * dist / 5 + 0.5
+                # We compute the angle between the reference of the robot and the goal
+                ob = math.atan2(dy, dx)
+
+                angle_error = ob - yaw
+                self.error_integration += angle_error * 0.1
+
+                self.angular = 0.8 * angle_error + 0.1 * self.error_integration
 
             # End of strategy
 
