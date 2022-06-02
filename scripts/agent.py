@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import math
+import time
 
 import rospy
 
 from geometry_msgs.msg import Pose2D, Twist
 from nav_msgs.msg import Path
 import tf
+
 
 
 class Agent:
@@ -31,7 +33,7 @@ class Agent:
 
         self.path = list()
 
-        self.error_integration = 0
+        self.error_integration = []
         self.point_reached = True
         self.point_to_reach = None
 
@@ -70,16 +72,23 @@ class Agent:
 
             # Strategy
 
+            if len(self.error_integration) == 100:
+                self.error_integration.pop(0)
+
             # We import the actual position of the robot
             [x, y, yaw] = [self.robot_pose.x,
-                           self.robot_pose.y, self.robot_pose.theta]
+                           self.robot_pose.y, 
+                           self.robot_pose.theta]
+
+
             print("La position du robot : ", x, y)
             if math.dist((x, y), self.point_to_reach) < 0.1:
                 self.angular = 0
                 self.linear = 0
-
+                time.sleep(0.1)
                 if len(self.path):
                     self.point_to_reach = self.path.pop(0)
+                    self.error_integration = []
 
                 else:
                     self.reached = True
@@ -88,19 +97,26 @@ class Agent:
                 dx = self.point_to_reach[0] - x
                 dy = self.point_to_reach[1] - y
 
-                dist = math.sqrt(dx ** 2 + dy ** 2)
 
                 self.linear = 0
+                self.angular = 0
+
                 # We compute the angle between the reference of the robot and the goal
                 ob = math.atan2(dy, dx)
 
-                angle_error = ob - yaw
-                print(f"Angle error : {angle_error}")
-                if angle_error < 0.01:
-                    self.linear = 0
-                self.error_integration += angle_error * 0.1
+                angle_error = (ob - yaw)
+                if angle_error >= math.pi:
+                    angle_error = angle_error - 2*math.pi
 
-                self.angular = 0.1 * angle_error + 0.01 * self.error_integration
+                self.error_integration.append(angle_error)
+
+                self.angular = 10 * angle_error + 0.01 * sum(self.error_integration)
+
+                print(f"Angle error : {angle_error}")
+                if abs(angle_error) < 0.05:
+                    self.linear = 100 * math.dist((x, y), self.point_to_reach)
+                    
+
 
             # End of strategy
             print(
