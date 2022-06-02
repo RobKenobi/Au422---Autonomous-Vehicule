@@ -10,8 +10,6 @@ from geometry_msgs.msg import Pose2D, Twist
 from nav_msgs.msg import Path
 import tf
 
-
-
 class Agent:
     def __init__(self):
         self.listener = tf.TransformListener()
@@ -72,7 +70,7 @@ class Agent:
 
             # Strategy
 
-            if len(self.error_integration) == 100:
+            if len(self.error_integration) == 80:
                 self.error_integration.pop(0)
 
             # We import the actual position of the robot
@@ -88,7 +86,6 @@ class Agent:
                 time.sleep(0.1)
                 if len(self.path):
                     self.point_to_reach = self.path.pop(0)
-                    self.error_integration = []
 
                 else:
                     self.reached = True
@@ -110,11 +107,11 @@ class Agent:
 
                 self.error_integration.append(angle_error)
 
-                self.angular = 10 * angle_error + 0.01 * sum(self.error_integration)
-
+                self.angular = 0.8 * angle_error# + 0.001 * sum(self.error_integration)
                 print(f"Angle error : {angle_error}")
-                if abs(angle_error) < 0.05:
-                    self.linear = 100 * math.dist((x, y), self.point_to_reach)
+                if abs(angle_error) < 0.1:
+                    
+                    self.linear = 1 - 0.5*abs(angle_error)/0.1
                     
 
 

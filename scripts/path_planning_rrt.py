@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import sys
+
 import rospy
 from geometry_msgs.msg import PoseStamped, Pose2D
 from nav_msgs.srv import GetMap
@@ -9,7 +9,6 @@ import tf
 import numpy as np
 import cv2
 
-import sys
 import rrt_dev as rr
 
 
@@ -118,8 +117,8 @@ class RRT:
         max_iter = self.max_iter
 
         P = rr.Path(init_node, goal_node, _map, dq, robot_size, max_iter)
-        P.generate(optimize=False, smooth=False)
-        self.path = P.getPath("original", init=True)
+        P.generate(optimize=True, smooth=True)
+        self.path = P.getPath("smooth", init=True)
         # print(self.path, file=sys.stderr)
 
         self.publishPath()
@@ -150,6 +149,6 @@ if __name__ == '__main__':
     # DO NOT TOUCH
     rospy.init_node("RRT", anonymous=True)
 
-    rrt = RRT(K=100000)
+    rrt = RRT(K=10000)
 
     rospy.spin()
